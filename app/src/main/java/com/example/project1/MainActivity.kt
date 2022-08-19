@@ -23,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.android.volley.toolbox.Volley
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
@@ -39,7 +40,8 @@ class MainActivity : ComponentActivity() {
         setContent {
            Project1Theme {
                 Surface {
-                    SkiList(packing = items)
+//                    SkiList(packing = items)
+                    Text(getMountainData("-43.471667","171.526444"))
                 }
            }
         }
@@ -108,20 +110,33 @@ fun SkiItem(item: String) {
 
 
 @Composable
-fun getMountainData(latitude:String, longitude:String): String? {
-    val url =
-        "https://weatherbit-v1-mashape.p.rapidapi.com/forecast/3hourly?lat=$latitude&lon=$longitude";
-    var result: String? = null
+fun getMountainData(latitude:String, longitude:String): String {
+//    val url =
+//        "https://weatherbit-v1-mashape.p.rapidapi.com/forecast/3hourly?lat=$latitude&lon=$longitude";
+//    var result: String? = null
+//    val client = OkHttpClient()
+//
+//    val request = Request.Builder()
+//        .url(url)
+//        .get()
+//        .addHeader("X-RapidAPI-Key", "eab9c740d1msh8d3458a2dfd02bep102430jsn0edf7ce8e907")
+//        .addHeader("X-RapidAPI-Host", "weatherbit-v1-mashape.p.rapidapi.com")
+//        .build()
+//
+//    val response = client. newCall(request).execute()
+//    val queue = Volley.newRequestQueue(this)
+//    val url = "https://www.google.com"
+
     val client = OkHttpClient()
 
     val request = Request.Builder()
-        .url(url)
+        .url("https://weatherbit-v1-mashape.p.rapidapi.com/forecast/3hourly?lat=-43.4717&lon=171.5264")
         .get()
         .addHeader("X-RapidAPI-Key", "eab9c740d1msh8d3458a2dfd02bep102430jsn0edf7ce8e907")
         .addHeader("X-RapidAPI-Host", "weatherbit-v1-mashape.p.rapidapi.com")
         .build()
 
     val response = client.newCall(request).execute()
-    result = response.body?.string()
-    return result
+//    result = response.body?.string()
+    return "mountaindata"
 }
