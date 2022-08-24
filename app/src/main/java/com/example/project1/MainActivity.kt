@@ -1,34 +1,35 @@
 package com.example.project1
 
 import android.os.Bundle
-import android.os.Message
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.Checkbox
+import androidx.compose.material.CheckboxDefaults
+import androidx.compose.material.Divider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material.*
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.project1.ui.theme.Project1Theme
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
+import com.android.volley.Request
+import com.android.volley.Response
+import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.launch
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import java.io.IOException
+import com.example.project1.ui.theme.Project1Theme
+import org.json.JSONObject
 
 class MainActivity : ComponentActivity() {
     private val items = listOf<String>(
@@ -38,12 +39,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-           Project1Theme {
-                Surface {
-//                    SkiList(packing = items)
-                    Text(getMountainData("-43.471667","171.526444"))
-                }
-           }
+           Navigation()
         }
     }
 }
@@ -66,7 +62,7 @@ fun DefaultPreview() {
 /**
  * A list with each item in its own row with a checkbox
  */
-@Composable
+@Composable()
 fun SkiList(packing: List<String>) {
 
 //    //Make a header
@@ -75,7 +71,8 @@ fun SkiList(packing: List<String>) {
 //        modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp),
 //        style = MaterialTheme.typography.headlineMedium
 //    )
-    LazyColumn(modifier = Modifier.fillMaxSize()
+    LazyColumn(modifier = Modifier
+        .fillMaxSize()
         .padding(start = 16.dp, top = 16.dp, end = 16.dp)) {
         items(packing) { item ->
             SkiItem(item)
@@ -101,42 +98,73 @@ fun SkiItem(item: String) {
             checked = checked.value,
             onCheckedChange = { checked.value = it },
             colors = CheckboxDefaults.colors(),
-            modifier = Modifier.wrapContentHeight().padding(vertical = 33.dp)
+            modifier = Modifier
+                .wrapContentHeight()
+                .padding(vertical = 33.dp)
         )
         Text(text = item,
-        style = MaterialTheme.typography.headlineMedium, modifier = Modifier.wrapContentHeight().padding(vertical = 25.dp))
+        style = MaterialTheme.typography.headlineMedium, modifier = Modifier
+                .wrapContentHeight()
+                .padding(vertical = 25.dp))
     }
 }
 
+interface VolleyCallback {
+    fun onSuccess(result: JSONObject?)
+}
 
 @Composable
-fun getMountainData(latitude:String, longitude:String): String {
-//    val url =
-//        "https://weatherbit-v1-mashape.p.rapidapi.com/forecast/3hourly?lat=$latitude&lon=$longitude";
-//    var result: String? = null
+fun getMountainData(latitude:String, longitude:String,callback:VolleyCallback): JSONObject {
+
+    val ctx = LocalContext.current
+// Instantiate the RequestQueue.
+    val queue = Volley.newRequestQueue(ctx)
+
+
+
+    val url = "https://weatherbit-v1-mashape.p.rapidapi.com/forecast/3hourly?lat=-43.4717&lon=171.5264"
+    var weatherDescription: JSONObject = JSONObject()
+    val weather:String = " "
+// Request a string response from the provided URL.
+    val stringRequest = object: StringRequest(Request.Method.GET, url,
+        Response.Listener<String> { response ->
+//            println(response.J)
+            //turn response into json
+            val json = JSONObject(response)
+            //get the data from the json
+            val data = json.getJSONArray("data")
+            //gets first json object
+            val weather = data.getJSONObject(0)
+            //get the weather description
+            weatherDescription = JSONObject(weather.getString("weather"))
+//            println(weatherDescription)
+            callback.onSuccess(weatherDescription)
+        },
+        Response.ErrorListener { println("ERROR")})
+    {
+        override fun getHeaders(): MutableMap<String, String> {
+            val headers = HashMap<String, String>()
+            headers["X-RapidAPI-Key"] = "eab9c740d1msh8d3458a2dfd02bep102430jsn0edf7ce8e907"
+            headers["X-RapidAPI-Host"] = "weatherbit-v1-mashape.p.rapidapi.com"
+            return headers
+        }
+    }
+
+    queue.add(stringRequest)
+    println(weatherDescription)
+
+    return weatherDescription
+//    val response: HttpResponse = client.get("https://ktor.io/docs/welcome.html")
 //    val client = OkHttpClient()
 //
 //    val request = Request.Builder()
-//        .url(url)
+//        .url("https://weatherbit-v1-mashape.p.rapidapi.com/forecast/3hourly?lat=-43.4717&lon=171.5264")
 //        .get()
 //        .addHeader("X-RapidAPI-Key", "eab9c740d1msh8d3458a2dfd02bep102430jsn0edf7ce8e907")
 //        .addHeader("X-RapidAPI-Host", "weatherbit-v1-mashape.p.rapidapi.com")
 //        .build()
 //
-//    val response = client. newCall(request).execute()
-//    val queue = Volley.newRequestQueue(this)
-//    val url = "https://www.google.com"
-
-    val client = OkHttpClient()
-
-    val request = Request.Builder()
-        .url("https://weatherbit-v1-mashape.p.rapidapi.com/forecast/3hourly?lat=-43.4717&lon=171.5264")
-        .get()
-        .addHeader("X-RapidAPI-Key", "eab9c740d1msh8d3458a2dfd02bep102430jsn0edf7ce8e907")
-        .addHeader("X-RapidAPI-Host", "weatherbit-v1-mashape.p.rapidapi.com")
-        .build()
-
-    val response = client.newCall(request).execute()
-//    result = response.body?.string()
-    return "mountaindata"
+//    val response = client.newCall(request).execute()
+////    result = response.body?.string()
+//    return "mountaindata"
 }
