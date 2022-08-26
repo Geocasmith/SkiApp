@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">Project1</string>
+    <string name="mounthuttTitle">Mount Hutt</string>
+    <string name="coronetTitle">Coronet Peak</string>
+    <string name="cardronaTitle">Cardrona</string>
+    <string name="ruapehuTitle">Mt Ruapehu</string>
+
+    <string name="mounthuttDescription">Mount Hutt is most popular mountain in the Canterbury area. The top is at an altitude of 2190m </string>
+    <string name="coronetDescription">Coronet Peak is the first commercial ski area in New Zealand. The top is at an altitude of 1651m </string>
+    <string name="cardronaDescription">Cardrona is the largest ski area in New Zealand. The top is at an altitude of 1894m </string>
+    <string name="ruapehuDescription">Mt Ruapehu has two ski fields: Whakapapa and Tūroa. The top is at an altitude of 2797m </string>
 </resources>
