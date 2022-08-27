@@ -9,4 +9,18 @@
     <string name="coronetDescription">Coronet Peak is the first commercial ski area in New Zealand. The top is at an altitude of 1651m </string>
     <string name="cardronaDescription">Cardrona is the largest ski area in New Zealand. The top is at an altitude of 1894m </string>
     <string name="ruapehuDescription">Mt Ruapehu has two ski fields: Whakapapa and Tūroa. The top is at an altitude of 2797m </string>
+    "Skiis","Helmet", "Poles","Gloves","Lunch","Water Bottle","Coffee","Jacket","Socks","Boots","Shirt","Hoodie","Goggles"
+    <string name="item1">Skiis</string>
+    <string name="item2">Helmet</string>
+    <string name="item3">Poles</string>
+    <string name="item4">Gloves</string>
+    <string name="item5">Lunch</string>
+    <string name="item6">Water Bottle</string>
+    <string name="item7">Coffee</string>
+    <string name="item8">Jacket</string>
+    <string name="item9">Socks</string>
+    <string name="item10">Boots</string>
+    <string name="item11">Shirt</string>
+    <string name="item12">Hoodie</string>
+    <string name="item13">Goggles</string>
 </resources>

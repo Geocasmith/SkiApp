@@ -102,6 +102,7 @@ fun Navigation() {
                     val imageIcons = listOf("mounthutt", "coronet", "ruapehu", "cardrona")
                     LazyColumn(modifier = Modifier.fillMaxSize()) {
 
+//                        mountains
                         items(imageIcons) {
                             //sets the drawable id to the mountain name
                             var drawableId = ctx.getResources()
@@ -110,7 +111,13 @@ fun Navigation() {
                             IconButton(onClick = { navController.navigate(Screens.MountainScreen.route + "/{$it}") }) {
                                 Image(painter = imageMountain, contentDescription = "")
                             }
+
                         }
+                    }
+                    //Create imageicon for ski list
+                    val imageSkiList: Painter = painterResource(id = R.drawable.packing)
+                    IconButton(onClick = { navController.navigate(Screens.SkiList.route) }) {
+                        Image(painter = imageSkiList, contentDescription = "")
                     }
 
 //                        val imageCoronet: Painter = painterResource(id = R.drawable.coronet)
