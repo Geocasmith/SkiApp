@@ -5,10 +5,12 @@
     import android.net.Uri
     import android.util.JsonReader
     import android.util.JsonWriter
-    import android.view.KeyEvent.KEYCODE_ENTER
     import android.widget.Toast
-    import androidx.compose.animation.*
+    import androidx.compose.animation.AnimatedVisibility
+    import androidx.compose.animation.ExperimentalAnimationApi
     import androidx.compose.animation.core.tween
+    import androidx.compose.animation.scaleIn
+    import androidx.compose.animation.scaleOut
     import androidx.compose.foundation.Image
     import androidx.compose.foundation.layout.*
     import androidx.compose.foundation.lazy.LazyColumn
@@ -28,7 +30,10 @@
     import androidx.compose.ui.Modifier
     import androidx.compose.ui.graphics.Color
     import androidx.compose.ui.graphics.painter.Painter
-    import androidx.compose.ui.input.key.*
+    import androidx.compose.ui.input.key.Key
+    import androidx.compose.ui.input.key.KeyEvent
+    import androidx.compose.ui.input.key.key
+    import androidx.compose.ui.input.key.onKeyEvent
     import androidx.compose.ui.platform.LocalContext
     import androidx.compose.ui.res.painterResource
     import androidx.compose.ui.text.input.TextFieldValue
@@ -44,10 +49,8 @@
     import com.android.volley.toolbox.StringRequest
     import com.android.volley.toolbox.Volley
     import com.example.project1.ui.theme.Project1Theme
-    import kotlinx.coroutines.NonCancellable.cancel
     import kotlinx.coroutines.launch
     import org.json.JSONObject
-    import java.io.FileNotFoundException
     import java.io.InputStreamReader
     import java.io.OutputStreamWriter
 
@@ -147,22 +150,39 @@
         val ctx = LocalContext.current
         val scope = rememberCoroutineScope()
 
-
+        //read file using SharedPreferences
         val file = ctx.openFileInput("packing.json")
-        val reader = JsonReader(InputStreamReader(file))
-        val packingFromStorage = read(reader)
-        reader.close()
 
-        val fileWrite = ctx.openFileOutput("packing.json", Context.MODE_PRIVATE)
-        val writer = JsonWriter(OutputStreamWriter(fileWrite))
+
+//        val file = ctx.openFileInput("packing.json")
+//        val reader = JsonReader(InputStreamReader(file))
+//        val packingFromStorage = read(reader)
+//        reader.close()
+        val sharedPref =
+            ctx.getSharedPreferences("packing", Context.MODE_PRIVATE)
+//        var packingList: Set<String> = sharedPref.getStringSet("key",  ) as Set<String>
+        var packingList: Set<String> = sharedPref.getStringSet("key", HashSet()) as Set<String>;
+//        val fileWrite = ctx.openFileOutput("packing.json", Context.MODE_PRIVATE)
+//        val writer = JsonWriter(OutputStreamWriter(fileWrite))
         val packing = remember{mutableStateListOf<String>()}
-        //save packing across orientation changes
-
-
-
-        for (item in packingFromStorage) {
-            packing.add(item)
-        }
+//        var packingList = listOf<String>(
+//            "Skiis",
+//            "Helmet",
+//            "Poles",
+//            "Gloves",
+//            "Lunch",
+//            "Water Bottle",
+//            "Coffee",
+//            "Jacket",
+//            "Socks",
+//            "Boots",
+//            "Shirt",
+//            "Hoodie",
+//            "Goggles"
+//        )
+//        for (item in packing) {
+//            packing.add(item)
+//        }
         val newItemInput = remember { mutableStateOf(TextFieldValue()) }
 
         Column() {
@@ -188,11 +208,21 @@
                             scope.launch {
                                 packing.add(newItemInput.value.text)
                                 newItemInput.value = TextFieldValue()
-                                //write the value to the json
-                                write(packing, writer)
-                                //save to internal storage
-                                fileWrite.flush()
-                                fileWrite.close()
+                                //add to packinglist
+                                packingList = packingList + newItemInput.value.text
+//                                //write the value to the json
+//                                write(packing, writer)
+//                                //save to internal storage
+//                                fileWrite.flush()
+//                                fileWrite.close()
+//                                //save using SharedPreferences
+//                                val sharedPref =
+//                                    ctx.getSharedPreferences("packing", Context.MODE_PRIVATE)
+                                val editor = sharedPref.edit()
+//                                editor.putString("packing", newItemInput.value.text)
+                                editor.putStringSet("key", packingList.toSet())
+                                editor.apply()
+
                             }
                         }
                         false
@@ -385,7 +415,9 @@
             var visible by rememberSaveable { mutableStateOf(false) }
 
             Row(verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 5.dp)) {
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 5.dp)) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
