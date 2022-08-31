@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Project1</string>
+    <string name="app_name">Mountain Buddy</string>
     <string name="mounthuttTitle">Mount Hutt</string>
     <string name="coronetTitle">Coronet Peak</string>
     <string name="cardronaTitle">Cardrona</string>
@@ -23,4 +23,27 @@
     <string name="item11">Shirt</string>
     <string name="item12">Hoodie</string>
     <string name="item13">Goggles</string>
+
+    <string name="mounthuttLon">-43.4716</string>
+    <string name="mounthuttLat">171.5264</string>
+    <string name="coronetLon">-44.9272</string>
+    <string name="coronetLat">168.7363</string>
+    <string name="cardronaLon">-44.8649</string>
+    <string name="cardronaLat">169.0175</string>
+    <string name="ruapehuLon">-39.2817</string>
+    <string name="ruapehuLat">175.5685</string>
+
+    <string name="newItem">New Item</string>
+    <string name="showMap">Show Map</string>
+    <string name="mapShown">Map Shown</string>
+    <string name="mapHidden">Map Hidden</string>
+    <string name="contentDescription"> </string>
+    <string name="description">Description</string>
+    <string name="currentWeather">Current Weather: </string>
+    <string name="directionButton">Get Directions</string>
+
+
+
+
+
 </resources>

@@ -1,0 +1,44 @@
+<resources>
+    <string name="app_name">Amigo de la montaña</string>
+    <string name="mounthuttTitle">Monte Hutt</string>
+    <string name="coronetTitle">Pico Corona</string>
+    <string name="cardronaTitle">Cardrona</string>
+    <string name="ruapehuTitle">Monte Ruapehu</string>
+
+    <string name="mounthuttDescription">Mount Hutt es la montaña más popular en el área de Canterbury. La cima está a una altitud de 2190m </string>
+    <string name="coronetDescription">Coronet Peak es la primera zona de esquí comercial de Nueva Zelanda. La cima está a una altitud de 1651m </string>
+    <string name="cardronaDescription">Cardrona es la zona de esquí más grande de Nueva Zelanda. La cima está a una altitud de 1894m </string>
+    <string name="ruapehuDescription">El monte Ruapehu tiene dos pistas de esquí: Whakapapa y Tūroa. La cima está a una altitud de 2797m </string>
+    "Esquís","Casco", "Bastones","Guantes","Almuerzo","Botella de agua","Café","Chaqueta","Calcetines","Botas","Camisa","Sudadera con capucha"," Gafas de protección"
+    <string name="item1">Cielos</string>
+    <string name="item2">Casco</string>
+    <string name="item3">Polaco</string>
+    <string name="item4">Guantes</string>
+    <string name="item5">Almuerzo</string>
+    <string name="item6">Botella de agua</string>
+    <string name="item7">Café</string>
+    <string name="item8">Chaqueta</string>
+    <string name="item9">Calcetines</string>
+    <string name="item10">Botas</string>
+    <string name="item11">Camisa</string>
+    <string name="item12">Sudadera con capucha</string>
+    <string name="item13">Gafas</string>
+
+    <string name="mounthuttLon">-43.4716</string>
+    <string name="mounthuttLat">171.5264</string>
+    <string name="coronetLon">-44.9272</string>
+    <string name="coronetLat">168.7363</string>
+    <string name="cardronaLon">-44.8649</string>
+    <string name="cardronaLat">169.0175</string>
+    <string name="ruapehuLon">-39.2817</string>
+    <string name="ruapehuLat">175.5685</string>
+
+    <string name="newItem">Nuevo elemento</string>
+    <string name="showMap">Mostrar mapa</string>
+    <string name="mapShown">Mostrar mapa</string>
+    <string name="mapHidden">Mapa oculto</string>
+    <string name="contentDescription"> </string>
+    <string name="description">Descripción</string>
+    <string name="currentWeather">Tiempo actual: </string>
+    <string name="directionButton">Obtener direcciones</string>
+</resources>

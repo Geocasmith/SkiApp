@@ -22,6 +22,7 @@
     import androidx.compose.material3.MaterialTheme
     import androidx.compose.material3.Surface
     import androidx.compose.runtime.*
+    import androidx.compose.runtime.saveable.rememberSaveable
     import androidx.compose.ui.Alignment
     import androidx.compose.ui.ExperimentalComposeUiApi
     import androidx.compose.ui.Modifier
@@ -83,15 +84,11 @@
                 Surface {
                     Column() {
 
-
-    //                    Text(getMountainData("-43.471667","171.526444"))
                         //create lazylist of imageicons with routes to each mountain
-                        val imageIcons = listOf("mounthutt", "coronet", "ruapehu", "cardrona")
+                        val imageIcons = listOf("mounthutt", "coronet", "ruapehu", "cardrona","packing")
 
-                        Column(Modifier.fillMaxSize()) {
+                        Column(Modifier.fillMaxWidth()) {
                             LazyColumn(Modifier.weight(1f)) {
-
-                                //                        mountains
                                 items(imageIcons) {
                                     //sets the drawable id to the mountain name
                                     var drawableId = ctx.getResources()
@@ -100,17 +97,12 @@
                                     IconButton(onClick = { navController.navigate(Screens.MountainScreen.route + "/{$it}") }) {
                                         Image(
                                             painter = imageMountain,
-                                            contentDescription = "",
+                                            contentDescription = ctx.getString(R.string.contentDescription),
                                             modifier = Modifier.fillMaxWidth()
                                         )
                                     }
 
                                 }
-                            }
-                            //Create imageicon for ski list
-                            val imageSkiList: Painter = painterResource(id = R.drawable.packing)
-                            IconButton(onClick = { navController.navigate(Screens.SkiList.route) }) {
-                                Image(painter = imageSkiList, contentDescription = "")
                             }
                         }
                     }
@@ -158,15 +150,19 @@
 
         val file = ctx.openFileInput("packing.json")
         val reader = JsonReader(InputStreamReader(file))
-//        val packingFromStorage = read(reader)
+        val packingFromStorage = read(reader)
+        reader.close()
 
         val fileWrite = ctx.openFileOutput("packing.json", Context.MODE_PRIVATE)
         val writer = JsonWriter(OutputStreamWriter(fileWrite))
         val packing = remember{mutableStateListOf<String>()}
+        //save packing across orientation changes
 
-//        for (item in packingFromStorage) {
-//            packing.add(item)
-//        }
+
+
+        for (item in packingFromStorage) {
+            packing.add(item)
+        }
         val newItemInput = remember { mutableStateOf(TextFieldValue()) }
 
         Column() {
@@ -177,7 +173,8 @@
                 onValueChange = {
                     newItemInput.value = it
                 },
-                label = { Text("New Item") },
+                //label uses newItem string resource
+                label = { Text(text = ctx.getString(R.string.newItem)) },
                 //on enter add the item
 //                modifier = Modifier.fillMaxWidth(),
                 //on enter add item to list and clear text field
@@ -193,6 +190,9 @@
                                 newItemInput.value = TextFieldValue()
                                 //write the value to the json
                                 write(packing, writer)
+                                //save to internal storage
+                                fileWrite.flush()
+                                fileWrite.close()
                             }
                         }
                         false
@@ -215,7 +215,7 @@
 
 
         }
-        reader.close()
+//        reader.close()
     }
 
     fun read(reader: JsonReader): List<String> {
@@ -267,7 +267,7 @@
         Row(
 
         ) {
-            val checked = remember { mutableStateOf(false) }
+            val checked = rememberSaveable { mutableStateOf(false) }
 
             Checkbox(
                 checked = checked.value,
@@ -277,7 +277,7 @@
                     .wrapContentHeight()
                     .padding(vertical = 33.dp)
             )
-            androidx.compose.material3.Text(
+            Text(
                 text = item,
                 style = MaterialTheme.typography.headlineMedium, modifier = Modifier
                     .wrapContentHeight()
@@ -328,21 +328,20 @@
         //remove the first and last characters
         val mountainNoBraces = mountain?.substring(1, mountain.length - 1)
 
-        if(mountainNoBraces=="SkiList"){
-            navController.navigate(Screens.SkiList.route)
+        //Renders the ski list instead of mountain view page. I did this so I can put them all into a lazycolumn
+        if(mountainNoBraces=="packing"){
+            SkiList()
         }else {
-
-
-
-            var latitude = "-43.471667"
-            var longitude = "171.526444"
-
-
             val ctx = LocalContext.current
             val queue = Volley.newRequestQueue(ctx)
 
-            Toast.makeText(ctx, "Loading Weather", Toast.LENGTH_SHORT).show()
-
+            //gets long and lat from the xml
+            val getLatitutde = ctx.getResources()
+                .getIdentifier(mountainNoBraces + "Lat", "string", ctx.getPackageName());
+            val getLongitude = ctx.getResources()
+                .getIdentifier(mountainNoBraces + "Lon", "string", ctx.getPackageName());
+            var latitude = ctx.getString(getLatitutde)
+            val longitude = ctx.getString(getLongitude)
 
             val url =
                 "https://weatherbit-v1-mashape.p.rapidapi.com/forecast/3hourly?lat=${latitude}&lon=${longitude}"
@@ -368,7 +367,7 @@
                     weatherStore.value = description
                     codeStore.value = code
                 },
-                Response.ErrorListener { println("ERROR") }) {
+                Response.ErrorListener { }) {
                 override fun getHeaders(): MutableMap<String, String> {
                     val headers = HashMap<String, String>()
                     headers["X-RapidAPI-Key"] = "eab9c740d1msh8d3458a2dfd02bep102430jsn0edf7ce8e907"
@@ -379,13 +378,14 @@
 
             //put the stringrequest in a launchedeffect to make it asynchronous
             LaunchedEffect(stringRequest) {
-                //put the request in the queue
                 queue.add(stringRequest)
             }
 
             var scrollState = rememberScrollState()
-            var visible by remember { mutableStateOf(false) }
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            var visible by rememberSaveable { mutableStateOf(false) }
+
+            Row(verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 5.dp)) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -396,15 +396,25 @@
                 ) {
 
                     //put switch with text Show Map in a row and have a toast when clicked
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(text = "Show Map", modifier = Modifier.padding(16.dp))
-                        Switch(checked = visible, onCheckedChange = { visible = it })
+                    Row(verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(3.dp)) {
+                        Text(text = ctx.getString(R.string.showMap), modifier = Modifier.padding(16.dp))
+//                        Switch(checked = visible, onCheckedChange = { visible = it })
+                        //switch which toggles the map view and makes a toast
+                        Switch(checked = visible, onCheckedChange ={
+                            visible = it
+                            if (visible) {
+                                Toast.makeText(ctx, ctx.getString(R.string.mapShown), Toast.LENGTH_SHORT).show()
+                            } else {
+                                Toast.makeText(ctx, ctx.getString(R.string.mapHidden), Toast.LENGTH_SHORT).show()
+                            }
+                        })
                     }
                     //Shows the Mountain
                     var drawableId = ctx.getResources()
                         .getIdentifier(mountainNoBraces, "drawable", ctx.getPackageName());
                     val imageMountain: Painter = painterResource(id = drawableId)
-                    Image(painter = imageMountain, contentDescription = "")
+                    Image(painter = imageMountain, contentDescription = ctx.getString(R.string.contentDescription))
 
 //                    Toast.cancel()
 
@@ -425,20 +435,10 @@
                         val imageMountain: Painter = painterResource(id = drawableId)
                         Image(
                             painter = imageMountain,
-                            contentDescription = "",
+                            contentDescription = ctx.getString(R.string.contentDescription),
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
-
-
-                    //switch shows toast Hidden or Shown
-                    if (visible) {
-                        Toast.makeText(ctx, "Map Shown", Toast.LENGTH_SHORT).show()
-
-                    } else {
-                        Toast.makeText(ctx, "Map Hidden", Toast.LENGTH_SHORT).show()
-                    }
-
 
                     //get the title from resources
                     val title = ctx.getResources()
@@ -454,7 +454,7 @@
                         );
                     Text(ctx.getString(description))
 
-                    Text("Current Weather: ${weatherStore.value}")
+                    Text(ctx.getString(R.string.currentWeather)+weatherStore.value)
 
                     //            //add text box widget to type in notes
                     //            TextField(
@@ -484,7 +484,7 @@
                         )
                     }
                     ) {
-                        Text("Get Directions")
+                        Text(ctx.getString(R.string.directionButton))
                     }
 
 
