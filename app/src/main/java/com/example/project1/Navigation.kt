@@ -67,33 +67,31 @@
             composable(Screens.SkiList.route) {
                 SkiList()
             }
-    //        composable(route=Screens.MountainScreen.route,
-    //            arguments = listOf(navArgument("userId") { defaultValue = "me" }) {
-    //                backStackEntry -> MountainScreen(backStackEntry.arguments?.getString("mountain"),navController = navController)
-    //        }
-                        composable(
-                        Screens.MountainScreen.route+"/{userId}",
+            composable(Screens.MountainScreen.route+"/{userId}",
                 arguments = listOf(navArgument("userId") { defaultValue = "me" })
-            ) { backStackEntry ->
-                            MountainScreen(backStackEntry.arguments?.getString("userId"),navController)
+            ) { entryPoint -> MountainScreen(entryPoint.arguments?.getString("userId"),navController)
             }
 
         }
     }
+
+    /**
+     * Home screen for the app. Displays the list of mountains and ski packing iconButtons.
+     */
         @Composable
         fun HomeScreen (navController: NavController) {
             val ctx = LocalContext.current
             Project1Theme {
                 Surface {
                     Column() {
-
                         //create lazylist of imageicons with routes to each mountain
                         val imageIcons = listOf("mounthutt", "coronet", "ruapehu", "cardrona","packing")
 
                         Column(Modifier.fillMaxWidth()) {
                             LazyColumn(Modifier.weight(1f)) {
                                 items(imageIcons) {
-                                    //sets the drawable id to the mountain name
+
+                                    //sets the drawable id to the mountain name. Gets and draws the mountain imageIcon
                                     var drawableId = ctx.getResources()
                                         .getIdentifier(it, "drawable", ctx.getPackageName());
                                     val imageMountain: Painter = painterResource(id = drawableId)
@@ -120,14 +118,52 @@
 
 
 
+        @OptIn(ExperimentalComposeUiApi::class)
         @Composable()
-        fun SkiListOG(navController: NavController) {
+        fun SkiList2() {
+
+            val scope = rememberCoroutineScope()
+
             //reads packing.txt to get json ski list
             val ctx = LocalContext.current
+            val newItemInput = remember { mutableStateOf(TextFieldValue()) }
+            val sharedPref =
+                ctx.getSharedPreferences("packing", Context.MODE_PRIVATE)
+            var packingList: Set<String> = remember{sharedPref.getStringSet("key", HashSet()) as Set<String>};
+//            val packing = remember{mutableStateListOf<String>()}
 
-                val file = ctx.openFileInput("packing.json")
+
+
+            val file = ctx.openFileInput("packing.json")
                 val reader = JsonReader(InputStreamReader(file))
                 val packing = read(reader)
+            Column() {
+                TextField(
+                    value = newItemInput.value,
+                    onValueChange = {
+                        newItemInput.value = it
+                    },
+                    //label uses newItem string resource
+                    label = { Text(text = ctx.getString(R.string.newItem)) },
+                    //on enter add the item
+//                modifier = Modifier.fillMaxWidth(),
+                    //on enter add item to list and clear text field
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .onKeyEvent { event: KeyEvent ->
+                            // handle backspace key
+                            if (event.key == Key.Enter
+                            ) {
+                                    newItemInput.value = TextFieldValue()
+                                    packingList = packingList + newItemInput.value.text
+                                    val editor = sharedPref.edit()
+                                    editor.putStringSet("key", packingList.toSet())
+                                    editor.apply()
+                            }
+                            false
+                        }
+                )
+
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
@@ -140,6 +176,7 @@
                     }
 
                 }
+            }
                 reader.close()
             }
 
@@ -160,11 +197,14 @@
 //        reader.close()
         val sharedPref =
             ctx.getSharedPreferences("packing", Context.MODE_PRIVATE)
+        //gets all the strings from the shared preferences and puts them in a set
 //        var packingList: Set<String> = sharedPref.getStringSet("key",  ) as Set<String>
-        var packingList: Set<String> = sharedPref.getStringSet("key", HashSet()) as Set<String>;
+        var packingList: Set<String> = remember{sharedPref.getStringSet("key", HashSet()) as Set<String>;}
 //        val fileWrite = ctx.openFileOutput("packing.json", Context.MODE_PRIVATE)
 //        val writer = JsonWriter(OutputStreamWriter(fileWrite))
         val packing = remember{mutableStateListOf<String>()}
+        //add the values from sharedpreferences to packing
+        packingList.forEach { packing.add(it) }
 //        var packingList = listOf<String>(
 //            "Skiis",
 //            "Helmet",
@@ -219,8 +259,8 @@
 //                                val sharedPref =
 //                                    ctx.getSharedPreferences("packing", Context.MODE_PRIVATE)
                                 val editor = sharedPref.edit()
-//                                editor.putString("packing", newItemInput.value.text)
-                                editor.putStringSet("key", packingList.toSet())
+                                editor.putString("packing", newItemInput.value.text)
+//                                editor.putStringSet("key", packingList.toSet())
                                 editor.apply()
 
                             }
@@ -295,10 +335,8 @@
     @Composable
     fun SkiItem(item: String) {
         Row(
-
         ) {
             val checked = rememberSaveable { mutableStateOf(false) }
-
             Checkbox(
                 checked = checked.value,
                 onCheckedChange = { checked.value = it },
@@ -351,7 +389,9 @@
 
     }
 
-
+    /**
+     * Displays the mountain information
+     */
     @OptIn(ExperimentalAnimationApi::class)
     @Composable
     fun MountainScreen(mountain:String?, navController: NavHostController) {
@@ -380,14 +420,11 @@
             val codeStore = remember { mutableStateOf<String>("") }
             //    val imageStore = remember { mutableStateOf<AsyncImage>("")}
 
-            // Request a string response from the provided URL.
+            // Request a string response from the provided URL using volley library.
             val stringRequest = object : StringRequest(
                 Request.Method.GET, url,
                 Response.Listener<String> { response ->
-                    //            println(response.J)
-                    //turn response into json
                     val json = JSONObject(response).getJSONArray("data").getJSONObject(0)
-
                     //gets the key weather from the json object
                     val weatherDescription = json.getJSONObject("weather")
                     //gets the description from the json object
@@ -411,6 +448,7 @@
                 queue.add(stringRequest)
             }
 
+            //makes the page scrollable
             var scrollState = rememberScrollState()
             var visible by rememberSaveable { mutableStateOf(false) }
 
@@ -426,12 +464,10 @@
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-
                     //put switch with text Show Map in a row and have a toast when clicked
                     Row(verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(3.dp)) {
                         Text(text = ctx.getString(R.string.showMap), modifier = Modifier.padding(16.dp))
-//                        Switch(checked = visible, onCheckedChange = { visible = it })
                         //switch which toggles the map view and makes a toast
                         Switch(checked = visible, onCheckedChange ={
                             visible = it
@@ -448,15 +484,11 @@
                     val imageMountain: Painter = painterResource(id = drawableId)
                     Image(painter = imageMountain, contentDescription = ctx.getString(R.string.contentDescription))
 
-//                    Toast.cancel()
-
                     //hide/show the mountain map
                     AnimatedVisibility(
                         visible = visible,
                         enter = scaleIn(animationSpec = tween(durationMillis = 1000)),
                         exit = scaleOut(animationSpec = tween(durationMillis = 1000))
-
-
                     ) {
                         var drawableId = ctx.getResources()
                             .getIdentifier(
@@ -486,26 +518,10 @@
                         );
                     Text(ctx.getString(description))
 
+                    //Gets the weather from the API and displays it
                     Text(ctx.getString(R.string.currentWeather)+weatherStore.value)
 
-                    //            //add text box widget to type in notes
-                    //            TextField(
-                    //                value = "",
-                    //                onValueChange = {},
-                    //                label = { Text("Notes") },
-                    //                modifier = Modifier.fillMaxWidth().padding(16.dp)
-                    //            )
-                    //            //button to save notes
-                    //            Button(onClick = {
-                    //                //save notes to database
-                    //                //navigate to home screen
-                    //                navController.navigate(R.id.homeScreen)
-                    //            }) {
-                    //                Text("Save")
-                    //            }
-
-
-                    //    Open google maps
+                    //    Open google maps button
                     Button(onClick =
                     {
                         ctx.startActivity(
@@ -518,15 +534,8 @@
                     ) {
                         Text(ctx.getString(R.string.directionButton))
                     }
-
-
-                    //
-
                 }
             }
-
-            //toast to display the weather description
-            //    Toast.makeText(ctx, weatherStore.value, Toast.LENGTH_LONG).show()
         }
 
     }
