@@ -1,10 +1,7 @@
     package com.example.project1
 
-    import android.content.Context
     import android.content.Intent
     import android.net.Uri
-    import android.util.JsonReader
-    import android.util.JsonWriter
     import android.widget.Toast
     import androidx.compose.animation.AnimatedVisibility
     import androidx.compose.animation.ExperimentalAnimationApi
@@ -18,14 +15,11 @@
     import androidx.compose.foundation.rememberScrollState
     import androidx.compose.foundation.verticalScroll
     import androidx.compose.material.*
-    import androidx.compose.material.icons.Icons
-    import androidx.compose.material.icons.filled.ArrowDropDown
     import androidx.compose.material3.IconButton
     import androidx.compose.material3.MaterialTheme
     import androidx.compose.material3.Surface
     import androidx.compose.runtime.*
     import androidx.compose.runtime.saveable.rememberSaveable
-    import androidx.compose.runtime.snapshots.SnapshotStateList
     import androidx.compose.ui.Alignment
     import androidx.compose.ui.ExperimentalComposeUiApi
     import androidx.compose.ui.Modifier
@@ -37,10 +31,8 @@
     import androidx.compose.ui.input.key.onKeyEvent
     import androidx.compose.ui.platform.LocalContext
     import androidx.compose.ui.res.painterResource
-    import androidx.compose.ui.text.input.TextFieldValue
     import androidx.compose.ui.unit.dp
     import androidx.lifecycle.ViewModel
-    import androidx.lifecycle.viewmodel.compose.viewModel
     import androidx.navigation.NavController
     import androidx.navigation.NavHostController
     import androidx.navigation.compose.NavHost
@@ -54,9 +46,6 @@
     import com.example.project1.ui.theme.Project1Theme
     import kotlinx.coroutines.launch
     import org.json.JSONObject
-    import java.io.InputStreamReader
-    import java.io.OutputStreamWriter
-
 
     @Composable
     fun Navigation(packingViewModel: packingViewModel) {
@@ -68,8 +57,7 @@
                 HomeScreen(navController = navController)
             }
             composable(Screens.SkiList.route) {
-                val packing = remember{mutableStateListOf<String>()}
-                val newItemInput = remember { mutableStateOf(TextFieldValue()) }
+
                 SkiList(packingViewModel)
             }
             composable(Screens.MountainScreen.route+"/{userId}",
@@ -119,120 +107,16 @@
 
             }
 
-
-
-
-
-        @OptIn(ExperimentalComposeUiApi::class)
-        @Composable()
-        fun SkiList2() {
-
-            val scope = rememberCoroutineScope()
-
-            //reads packing.txt to get json ski list
-            val ctx = LocalContext.current
-            val newItemInput = remember { mutableStateOf(TextFieldValue()) }
-            val sharedPref =
-                ctx.getSharedPreferences("packing", Context.MODE_PRIVATE)
-            var packingList: Set<String> = remember{sharedPref.getStringSet("key", HashSet()) as Set<String>};
-//            val packing = remember{mutableStateListOf<String>()}
-
-
-
-            val file = ctx.openFileInput("packing.json")
-                val reader = JsonReader(InputStreamReader(file))
-                val packing = read(reader)
-            Column() {
-                TextField(
-                    value = newItemInput.value,
-                    onValueChange = {
-                        newItemInput.value = it
-                    },
-                    //label uses newItem string resource
-                    label = { Text(text = ctx.getString(R.string.newItem)) },
-                    //on enter add the item
-//                modifier = Modifier.fillMaxWidth(),
-                    //on enter add item to list and clear text field
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .onKeyEvent { event: KeyEvent ->
-                            // handle backspace key
-                            if (event.key == Key.Enter
-                            ) {
-                                newItemInput.value = TextFieldValue()
-                                packingList = packingList + newItemInput.value.text
-                                val editor = sharedPref.edit()
-                                editor.putStringSet("key", packingList.toSet())
-                                editor.apply()
-                            }
-                            false
-                        }
-                )
-
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(start = 16.dp, top = 16.dp, end = 16.dp)
-                ) {
-                    items(packing) { item ->
-                        SkiItem(item)
-                        //divider with hex color #d3d3d3
-                        Divider(color = Color(0x11000100))
-                    }
-
-                }
-            }
-                reader.close()
-            }
-
+    /**
+     * Displays the packing checklist of items to pack
+     */
     @OptIn(ExperimentalComposeUiApi::class)
     @Composable()
-//    fun SkiList(packing: SnapshotStateList<String>, newItemInput: MutableState<TextFieldValue>) {
     fun SkiList(packingViewModel: packingViewModel) {
 
         //reads packing.txt to get json ski list
         val ctx = LocalContext.current
         val scope = rememberCoroutineScope()
-
-        //read file using SharedPreferences
-        val file = ctx.openFileInput("packing.json")
-
-
-//        val file = ctx.openFileInput("packing.json")
-//        val reader = JsonReader(InputStreamReader(file))
-//        val packingFromStorage = read(reader)
-//        reader.close()
-        val sharedPref =
-            ctx.getSharedPreferences("packing", Context.MODE_PRIVATE)
-        //gets the list from the viewmodel
-
-        var packingList: Set<String> = remember{sharedPref.getStringSet("key", HashSet()) as Set<String>;}
-//        val fileWrite = ctx.openFileOutput("packing.json", Context.MODE_PRIVATE)
-//        val writer = JsonWriter(OutputStreamWriter(fileWrite))
-//        val packing = remember{mutableStateListOf<String>()}
-//        val newItemInput = remember { mutableStateOf(TextFieldValue()) }
-        //add the values from sharedpreferences to packing
-//        packingList.forEach { packing.add(it) }
-//        var packingList = listOf<String>(
-//            "Skiis",
-//            "Helmet",
-//            "Poles",
-//            "Gloves",
-//            "Lunch",
-//            "Water Bottle",
-//            "Coffee",
-//            "Jacket",
-//            "Socks",
-//            "Boots",
-//            "Shirt",
-//            "Hoodie",
-//            "Goggles"
-//        )
-//        for (item in packing) {
-//            packing.add(item)
-//        }
-
-
         Column() {
 
 
@@ -241,22 +125,16 @@
                 onValueChange = {
                     packingViewModel.changeNewItemInput(it)
                 },
-                //label uses newItem string resource
                 label = { Text(text = ctx.getString(R.string.newItem)) },
-                //on enter add the item
-//                modifier = Modifier.fillMaxWidth(),
-                //on enter add item to list and clear text field
                 modifier = Modifier
                     .fillMaxWidth()
+                        //pressing enter adds to the list
                     .onKeyEvent { event: KeyEvent ->
-                        // handle backspace key
                         if (event.key == Key.Enter
-                        // also any additional checks of the "list" i.e isNotEmpty()
                         ) {
                             scope.launch {
                                 packingViewModel.addItem(packingViewModel.newItemInput)
                                 packingViewModel.changeNewItemInput("")
-
                             }
                         }
                         false
@@ -278,49 +156,7 @@
 
 
         }
-//        reader.close()
     }
-
-    fun read(reader: JsonReader): List<String> {
-        var packing = listOf<String>()
-        reader.beginObject()
-        while (reader.hasNext()) {
-            //add string to list
-            reader.nextName()
-            packing = packing.plus(reader.nextString())
-
-        }
-        reader.endObject()
-
-        return packing
-    }
-
-    fun write(packing: List<String>, writer: JsonWriter) {
-        writer.beginObject()
-
-        //write each item in packing to json file
-        for (item in packing) {
-            writer.name(item)
-            writer.value(item)
-        }
-
-        writer.endObject()
-    }
-    /**
-    * Adds an item to the packing list in json file
-     */
-    @Composable
-    fun addToPacking(item: String) {
-        val ctx = LocalContext.current
-        val file = ctx.openFileInput("packing.json")
-        val reader = JsonReader(InputStreamReader(file))
-        val packing = read(reader)
-        reader.close()
-        val writer = JsonWriter(OutputStreamWriter(ctx.openFileOutput("packing.json", Context.MODE_PRIVATE)))
-        write(packing.plus(item), writer)
-        writer.close()
-    }
-
 
     /*
     * An item with a checkbox and text in same row
@@ -347,41 +183,6 @@
         }
     }
 
-    @Composable
-    fun MapView(){
-        val ctx = LocalContext.current
-        //create a drop down menu with an option for each mountain
-        val mountain = listOf<String>(
-            "Hutt", "Coronet", "Ruapehu", "Cardrona"
-        )
-        var open by remember { mutableStateOf(false) }
-
-        Button(onClick = {open = !open}){
-            Text ("Mountains")
-            Icon(
-                imageVector = Icons.Filled.ArrowDropDown,
-                contentDescription = "Drop Down Menu",
-            )
-        }
-        DropdownMenu(
-            expanded = open,
-            onDismissRequest = {open = false},
-        ) {
-            mountain.forEach { label ->
-                DropdownMenuItem(onClick = {
-                    open = false
-
-
-                }) {
-                    Text(text = label)
-                }
-            }
-        }
-
-
-
-    }
-
     /**
      * Displays the mountain information
      */
@@ -393,8 +194,6 @@
 
         //Renders the ski list instead of mountain view page. I did this so I can put them all into a lazycolumn
         if(mountainNoBraces=="packing"){
-            val packing = remember{mutableStateListOf<String>()}
-            val newItemInput = remember { mutableStateOf(TextFieldValue()) }
             SkiList(packingViewModel)
         }else {
             val ctx = LocalContext.current
@@ -535,6 +334,9 @@
 
     }
 
+    /**
+     * Class to hold the viewmodel
+     */
     class packingViewModel: ViewModel() {
         //mutablestate of list of strings
         var packing by mutableStateOf<List<String>>(emptyList())
