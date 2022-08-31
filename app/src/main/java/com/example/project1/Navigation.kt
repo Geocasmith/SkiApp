@@ -25,6 +25,7 @@
     import androidx.compose.material3.Surface
     import androidx.compose.runtime.*
     import androidx.compose.runtime.saveable.rememberSaveable
+    import androidx.compose.runtime.snapshots.SnapshotStateList
     import androidx.compose.ui.Alignment
     import androidx.compose.ui.ExperimentalComposeUiApi
     import androidx.compose.ui.Modifier
@@ -38,6 +39,8 @@
     import androidx.compose.ui.res.painterResource
     import androidx.compose.ui.text.input.TextFieldValue
     import androidx.compose.ui.unit.dp
+    import androidx.lifecycle.ViewModel
+    import androidx.lifecycle.viewmodel.compose.viewModel
     import androidx.navigation.NavController
     import androidx.navigation.NavHostController
     import androidx.navigation.compose.NavHost
@@ -56,7 +59,7 @@
 
 
     @Composable
-    fun Navigation() {
+    fun Navigation(packingViewModel: packingViewModel) {
         val navController = rememberNavController()
     //    Credit to https://www.youtube.com/watch?v=4gUeyNkGE3g for teaching me how to use navigation
         NavHost(navController = navController, startDestination = Screens.HomeScreen.route) {
@@ -65,15 +68,17 @@
                 HomeScreen(navController = navController)
             }
             composable(Screens.SkiList.route) {
-                SkiList()
+                val packing = remember{mutableStateListOf<String>()}
+                val newItemInput = remember { mutableStateOf(TextFieldValue()) }
+                SkiList(packingViewModel)
             }
             composable(Screens.MountainScreen.route+"/{userId}",
                 arguments = listOf(navArgument("userId") { defaultValue = "me" })
-            ) { entryPoint -> MountainScreen(entryPoint.arguments?.getString("userId"),navController)
+            ) { entryPoint -> MountainScreen(entryPoint.arguments?.getString("userId"),navController,packingViewModel) }
             }
 
         }
-    }
+
 
     /**
      * Home screen for the app. Displays the list of mountains and ski packing iconButtons.
@@ -154,11 +159,11 @@
                             // handle backspace key
                             if (event.key == Key.Enter
                             ) {
-                                    newItemInput.value = TextFieldValue()
-                                    packingList = packingList + newItemInput.value.text
-                                    val editor = sharedPref.edit()
-                                    editor.putStringSet("key", packingList.toSet())
-                                    editor.apply()
+                                newItemInput.value = TextFieldValue()
+                                packingList = packingList + newItemInput.value.text
+                                val editor = sharedPref.edit()
+                                editor.putStringSet("key", packingList.toSet())
+                                editor.apply()
                             }
                             false
                         }
@@ -182,7 +187,9 @@
 
     @OptIn(ExperimentalComposeUiApi::class)
     @Composable()
-    fun SkiList() {
+//    fun SkiList(packing: SnapshotStateList<String>, newItemInput: MutableState<TextFieldValue>) {
+    fun SkiList(packingViewModel: packingViewModel) {
+
         //reads packing.txt to get json ski list
         val ctx = LocalContext.current
         val scope = rememberCoroutineScope()
@@ -197,14 +204,15 @@
 //        reader.close()
         val sharedPref =
             ctx.getSharedPreferences("packing", Context.MODE_PRIVATE)
-        //gets all the strings from the shared preferences and puts them in a set
-//        var packingList: Set<String> = sharedPref.getStringSet("key",  ) as Set<String>
+        //gets the list from the viewmodel
+
         var packingList: Set<String> = remember{sharedPref.getStringSet("key", HashSet()) as Set<String>;}
 //        val fileWrite = ctx.openFileOutput("packing.json", Context.MODE_PRIVATE)
 //        val writer = JsonWriter(OutputStreamWriter(fileWrite))
-        val packing = remember{mutableStateListOf<String>()}
+//        val packing = remember{mutableStateListOf<String>()}
+//        val newItemInput = remember { mutableStateOf(TextFieldValue()) }
         //add the values from sharedpreferences to packing
-        packingList.forEach { packing.add(it) }
+//        packingList.forEach { packing.add(it) }
 //        var packingList = listOf<String>(
 //            "Skiis",
 //            "Helmet",
@@ -223,15 +231,15 @@
 //        for (item in packing) {
 //            packing.add(item)
 //        }
-        val newItemInput = remember { mutableStateOf(TextFieldValue()) }
+
 
         Column() {
 
 
             TextField(
-                value = newItemInput.value,
+                value = packingViewModel.newItemInput,
                 onValueChange = {
-                    newItemInput.value = it
+                    packingViewModel.changeNewItemInput(it)
                 },
                 //label uses newItem string resource
                 label = { Text(text = ctx.getString(R.string.newItem)) },
@@ -246,22 +254,8 @@
                         // also any additional checks of the "list" i.e isNotEmpty()
                         ) {
                             scope.launch {
-                                packing.add(newItemInput.value.text)
-                                newItemInput.value = TextFieldValue()
-                                //add to packinglist
-                                packingList = packingList + newItemInput.value.text
-//                                //write the value to the json
-//                                write(packing, writer)
-//                                //save to internal storage
-//                                fileWrite.flush()
-//                                fileWrite.close()
-//                                //save using SharedPreferences
-//                                val sharedPref =
-//                                    ctx.getSharedPreferences("packing", Context.MODE_PRIVATE)
-                                val editor = sharedPref.edit()
-                                editor.putString("packing", newItemInput.value.text)
-//                                editor.putStringSet("key", packingList.toSet())
-                                editor.apply()
+                                packingViewModel.addItem(packingViewModel.newItemInput)
+                                packingViewModel.changeNewItemInput("")
 
                             }
                         }
@@ -272,9 +266,8 @@
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
-//                    .padding(start = 16.dp, top = 16.dp, end = 16.dp)
             ) {
-                items(packing) { item ->
+                items(packingViewModel.packing) { item ->
                     SkiItem(item)
                     //divider with hex color #d3d3d3
                     Divider(color = Color(0x11000100))
@@ -394,13 +387,15 @@
      */
     @OptIn(ExperimentalAnimationApi::class)
     @Composable
-    fun MountainScreen(mountain:String?, navController: NavHostController) {
+    fun MountainScreen(mountain:String?, navController: NavHostController,packingViewModel: packingViewModel) {
         //remove the first and last characters
         val mountainNoBraces = mountain?.substring(1, mountain.length - 1)
 
         //Renders the ski list instead of mountain view page. I did this so I can put them all into a lazycolumn
         if(mountainNoBraces=="packing"){
-            SkiList()
+            val packing = remember{mutableStateListOf<String>()}
+            val newItemInput = remember { mutableStateOf(TextFieldValue()) }
+            SkiList(packingViewModel)
         }else {
             val ctx = LocalContext.current
             val queue = Volley.newRequestQueue(ctx)
@@ -537,5 +532,24 @@
                 }
             }
         }
+
+    }
+
+    class packingViewModel: ViewModel() {
+        //mutablestate of list of strings
+        var packing by mutableStateOf<List<String>>(emptyList())
+        //mutablestateof textfield value
+        var newItemInput by mutableStateOf("")
+
+
+        fun addItem(item:String) {
+            //adds the textfield value to the list
+            packing = packing.plus(item)
+        }
+        fun changeNewItemInput(item:String) {
+            //changes the textfield value
+            newItemInput = item
+        }
+
 
     }

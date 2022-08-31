@@ -8,6 +8,7 @@ import android.util.JsonReader
 import android.util.JsonWriter
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -59,12 +60,13 @@ class MainActivity : ComponentActivity() {
         "Hoodie",
         "Goggles"
     )
+    private val packingViewModel by viewModels<packingViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             InitPackingList()
-            Navigation()
+            Navigation(packingViewModel)
 //            MapView()
 //            VisibilityAnimationSample()
 //            val parameters = mapOf("sources" to "bbc-news", "apiKey" to KEY)
